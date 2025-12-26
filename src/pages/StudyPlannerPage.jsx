@@ -1,23 +1,39 @@
-import { useState } from 'react'
-import { useTasks } from '../contexts/TaskContext'
-import { useTheme } from '../contexts/ThemeContext'
+import { use, useEffect, useState } from 'react'
+import { selectTheme } from '../../store/slices/themeSlice'
 import { EmptyState, ThemeToggle } from '../components/UI'
 import { AddTaskModal, EditTaskModal } from '../components/Modal'
 import { TaskSection } from '../components/Task'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  selectTasks,
+  addTask,
+  deleteTask,
+  toggleTaskComplete,
+  selectPendingTasks,
+  selectCompletedTasks
+} from '../../store/slices/tasksSlice'
+
+import {
+  selectAnalytics,
+  updateAnalytics
+} from '../../store/slices/analyticsSlice'
 
 function StudyPlannerPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [taskToEdit, setTaskToEdit] = useState(null)
-  const {
-    tasks,
-    addTask,
-    toggleTaskComplete,
-    editTask,
-    deleteTask,
-    getPendingTasks,
-    getCompletedTasks
-  } = useTasks()
+  //Pegando do Redux
+  const tasks = useSelector(selectTasks)
+  const pendingTasks = useSelector(selectPendingTasks)
+  const completedTasks = useSelector(selectCompletedTasks)
+  const dispatch = useDispatch()
+  const theme = useSelector(selectTheme)
+  const analytics = useSelector(selectAnalytics)
+
+  useEffect(() => {
+    dispatch(updateAnalytics(tasks))
+  }, [tasks, dispatch])
+
 
   const handleAddTask = () => {
     setIsModalOpen(true)
@@ -28,11 +44,11 @@ function StudyPlannerPage() {
   }
 
   const handleAddNewTask = (newTask) => {
-    addTask(newTask)
+    dispatch(addTask(newTask))
   }
 
   const handleToggleComplete = (taskId) => {
-    toggleTaskComplete(taskId)
+    dispatch(toggleTaskComplete(taskId))
   }
 
   const handleEditTask = (taskId) => {
@@ -51,15 +67,12 @@ function StudyPlannerPage() {
   }
 
   const handleDeleteTask = (taskId) => {
-    deleteTask(taskId)
+    dispatch(deleteTask(taskId))
   }
 
-  const pendingTasks = getPendingTasks()
-  const completedTasks = getCompletedTasks()
-  const theme = useTheme()
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center p-4"
       style={{
         backgroundImage: theme.background,
@@ -78,14 +91,14 @@ function StudyPlannerPage() {
             <ThemeToggle />
           </div>
         </div>
-        
+
         <div className={`${theme.cardBg} rounded-b-2xl p-6`}>
           {tasks.length === 0 ? (
             <EmptyState onAddTask={handleAddTask} />
           ) : (
             <div>
               <TaskSection
-                title="Para estudar"
+                title={`Para estudar (${analytics.pendingTasks})`}
                 tasks={pendingTasks}
                 borderColor="gray-600"
                 onToggleComplete={handleToggleComplete}
@@ -94,7 +107,7 @@ function StudyPlannerPage() {
               />
 
               <TaskSection
-                title="Concluído"
+                title={`Concluído (${analytics.completedTasks})`}
                 tasks={completedTasks}
                 borderColor="purple-header"
                 onToggleComplete={handleToggleComplete}
@@ -114,16 +127,16 @@ function StudyPlannerPage() {
             </div>
           )}
         </div>
-        
+
       </div>
-      
-      <AddTaskModal 
+
+      <AddTaskModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onAddTask={handleAddNewTask}
       />
-      
-      <EditTaskModal 
+
+      <EditTaskModal
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
         onEditTask={handleSaveEditTask}

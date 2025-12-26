@@ -1,14 +1,12 @@
-import { TaskProvider } from './contexts/TaskContext'
-import { ThemeProvider } from './contexts/ThemeContext'
 import StudyPlannerPage from './pages/StudyPlannerPage'
+import { Provider } from 'react-redux';
+import { store } from '../store';
 
 function App() {
   return (
-    <ThemeProvider>
-      <TaskProvider>
-        <StudyPlannerPage />
-      </TaskProvider>
-    </ThemeProvider>
+    <Provider store={store}>
+      <StudyPlannerPage />
+    </Provider>
   )
 }
 
